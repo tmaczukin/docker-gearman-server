@@ -1,0 +1,55 @@
+#!/bin/bash
+
+IP=$(hostname -i)
+HOSTNAME=$(hostname -f)
+
+echo
+echo ======================================================================
+echo
+echo -e "IP Address: \033[1m$IP\033[0m"
+echo -e "Hostname: \033[1m$HOSTNAME\033[0m"
+echo
+echo ======================================================================
+echo
+
+sed -i "s/listen=localhost/listen=0.0.0.0/" /etc/default/gearman-job-server
+
+appStart() {
+	/etc/init.d/gearman-job-server restart
+        tail -f /var/log/gearman-job-server/gearman.log
+}
+
+appUsage() {
+	echo
+	echo "Commands:"
+	echo
+	echo "  start   Start application"
+	echo "  usage   Show this help image"
+	echo
+}
+
+case "$1" in
+	start)
+		appStart
+		exit 0
+		;;
+	*)
+		if [ -x $1 ]; then
+			prog=$1
+			shift 1
+			$prog $@
+		else
+			prog=$(which $1)
+			if [ -n "${prog}" ]; then
+				shift 1
+				$prog $@
+			else
+				appUsage
+			fi
+		fi
+		exit 1
+		;;
+esac
+
+exit 0
+
